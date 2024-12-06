@@ -45,7 +45,7 @@ int gateway_to_server_request_handler(int code){
 
     case REQUEST_OTA_UPDATE:
       debug("GATEWAY_REQUEST: " + String(code) + " REQUEST_OTA_UPDATE"); 
-      if(start_MDNS_server()){
+      if(start_OTA_server()){
         server_response_code = RESPONSE_OK;
         OTA_Update_active = true;
         reset_OTA_timestamp();
@@ -112,7 +112,7 @@ void server_to_gateway_response_handler(int code){
     case RESPONSE_DEVICE_RESET:
       debug("ESP32_RESPONSE: " + String(code) + " RESPONSE_DEVICE_RESET");
       clear_eeprom();
-      main_state = SMARTCONFIG;
+      main_state = WIFI_SETUP;
       client.print(String(RESPONSE_OK));
       break;
 

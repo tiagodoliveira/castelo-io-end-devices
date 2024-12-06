@@ -1,5 +1,6 @@
 void connect_to_wifi() {
-  
+
+  WiFi.softAPdisconnect(true);
   WiFi.begin(ssid.c_str(), password.c_str());
   
   debug("Waiting for WiFi connection...");
@@ -7,9 +8,6 @@ void connect_to_wifi() {
   while (WiFi.status() != WL_CONNECTED) {
     manual_actuator_state_change_handler();
     board_led_blink(WIFI_BLINK_MAX);
-    if(bluetooth_handle()){
-      return;
-    }
   }
   save_network_settings();
   
@@ -28,18 +26,28 @@ void connect_to_wifi() {
   main_state = DEVICE_CONNECTION;
 }
 
-void init_smartconfig() {
-  
-  //Init WiFi as Station, start SmartConfig
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.beginSmartConfig();
+void init_wifi_setup() {
 
-  //Wait for SmartConfig packet from App
-  debug("Waiting for SmartConfig...");
-  while (!WiFi.smartConfigDone()) {
-    board_led_blink(SMARTCONFIG_BLINK_MAX);
-    manual_actuator_state_change_handler();
-    bluetooth_handle();
-  }
-  debug("SmartConfig received!");
+  //Init WiFi as Station, start SmartConfig
+  WiFi.softAP("Castelo-io-SmartDevice");
+
+  debug("AP IP address: ");
+  debug(WiFi.softAPIP().toString());
+
+  // Handle POST requests at /credentials
+  server.on("/credentials", HTTP_POST, [](){
+    debug("Received /credentials HTTP Request");
+    if (server.hasArg("ssid") && server.hasArg("password")) {
+      ssid = server.arg("ssid");
+      password = server.arg("password");
+      debug("Connecting to " + ssid + " WiFi Network");
+      server.send(200, "text/plain", "Connected successfully!");
+      main_state = CONNECT_WIFI;
+    } else {
+      server.send(400, "text/plain", "Invalid request. SSID and password are required.");
+    }
+  });
+
+  // Start the server
+  server.begin();
 }

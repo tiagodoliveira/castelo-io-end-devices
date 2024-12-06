@@ -49,33 +49,33 @@ int send_device_info_to_main_server() {
   return http_response_code;
 }
 
-boolean start_MDNS_server() {
-
+void start_MDNS_server(){
   // use multicast DNS to create host name address
   // https://tttapa.github.io/ESP8266/Chap08%20-%20mDNS.html
 
   debug(device_name);
   if (!MDNS.begin(device_name.c_str())) { //http://device_name.local
     debug("Error setting up MDNS responder!");
-    return false;
   }
   debug("MDNS responder started");
+}
 
+boolean start_OTA_server() {
   //return index page which is stored in serverIndex
   // TODO This will be deleted after automatic gateway implementation
-  OTA_server.on("/", HTTP_GET, []() {
-    OTA_server.sendHeader("Connection", "close");
-    OTA_server.send(200, "text/html", serverIndex);
+  server.on("/", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/html", serverIndex);
   });
 
   //handling uploading firmware file
-  OTA_server.on("/update", HTTP_POST, []() {
-    OTA_server.sendHeader("Connection", "close");
-    OTA_server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+  server.on("/update", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
     ESP.restart();
   }, []() {
     
-    HTTPUpload& upload = OTA_server.upload();
+    HTTPUpload& upload = server.upload();
     
     switch (upload.status) {
       
@@ -103,7 +103,7 @@ boolean start_MDNS_server() {
         break;
     }
   });
-  OTA_server.begin();
+  server.begin();
 
   return true;
 }

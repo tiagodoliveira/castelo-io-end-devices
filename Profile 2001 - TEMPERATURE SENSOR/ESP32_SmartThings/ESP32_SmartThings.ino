@@ -4,7 +4,10 @@
 #include "WiFi.h"
 #include "esp_system.h"
 #include "esp_bt_device.h"
-#include "BluetoothSerial.h"
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <EEPROM.h>
@@ -14,12 +17,13 @@
 #include <Update.h>
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
+#include <WiFiManager.h>
 
 /* 
  * Automatons States
  */
 #define READ_EEPROM 0
-#define SMARTCONFIG 1
+#define WIFI_SETUP 1
 #define CONNECT_WIFI 2
 #define DEVICE_CONNECTION 3
 #define CLIENT 4
@@ -36,6 +40,7 @@
 #define DEVICE_RESPONSE 16
 #define RECONNECT_TCP 17
 #define OTA_HANDLER 18
+#define SETTING_UP_WIFI 19
 
 /* 
  * HTTP/TCP Communication Protocol
@@ -109,9 +114,14 @@ const int ACTUATOR_STATE_ADDRESS[] = {130, 131, 132, 133, 134, 135, 136, 137, 13
 
 
 // Checks if Bluetooth is turned on
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
-#endif
+#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+BLECharacteristic *pCharacteristic;
+bool bt_device_connected = false;
+char bt_received_char = '\0';
+//#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+//#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+//#endif
 
 /* 
  * Program variables
@@ -135,15 +145,16 @@ unsigned long autonomous_timestamp, client_timestamp;
 unsigned long post_request_timestamp, reconnect_tcp_timestamp;
 unsigned long blink_timestamp, OTA_timestamp, request_actuator_timestamp;
 
-String ssid, password, device_name;
+String ssid, password;
+String device_name = "Castelo-io-Device";
 String main_server_address;
 
 JsonObject recieved_object;
 IPAddress gateway_address;
 uint16_t gateway_port;
-BluetoothSerial SerialBT;
+
 WiFiServer WiFi_Server(ESP32_SERVER_PORT);
-WebServer OTA_server(MDNS_SERVER_PORT);
+WebServer server(MDNS_SERVER_PORT);
 
 WiFiClient client;
 WiFiClient gateway;

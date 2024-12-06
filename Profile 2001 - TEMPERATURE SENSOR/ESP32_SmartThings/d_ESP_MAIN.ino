@@ -8,13 +8,17 @@ void esp_main() {
         main_state = CONNECT_WIFI;
       }
       else{
-        main_state = SMARTCONFIG;
+        main_state = WIFI_SETUP;
       }
       break;
       
-    case SMARTCONFIG:
-      init_smartconfig();
-      main_state = CONNECT_WIFI;
+    case WIFI_SETUP:
+      init_wifi_setup();
+      main_state = SETTING_UP_WIFI;
+      break;
+
+    case SETTING_UP_WIFI:
+      server.handleClient();
       break;
 
     case CONNECT_WIFI:
@@ -73,10 +77,9 @@ void esp_main() {
         main_state = CONNECT_WIFI;
       }
       if(OTA_Update_active){
-        OTA_server.handleClient();
+        server.handleClient();
         if((millis() - OTA_timestamp) >= OTA_max_time){
           debug("OTA Server shutting down...");
-          OTA_server.close();
           OTA_Update_active = false;
         }
       }

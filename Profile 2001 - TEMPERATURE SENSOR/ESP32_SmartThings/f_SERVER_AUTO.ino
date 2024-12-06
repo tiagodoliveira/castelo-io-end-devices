@@ -54,9 +54,6 @@ void autonomous_mode(){
         autonomous_mode_state = READ_SENSORS;
         reset_autonomous_timestamp();
       }
-      else{
-        bluetooth_handle();
-      }
       break;
       
     default:
