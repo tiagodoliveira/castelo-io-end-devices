@@ -19,6 +19,17 @@ void board_led_blink(int max_time){
   }
 }
 
+String get_working_mode_string(int working_mode){
+  switch (working_mode) {
+    case AUTONOMOUS_MODE:
+      return "AUTONOMOUS";
+    case MANUAL_MODE:
+      return "MANUAL";
+    default:
+      return "UNKNOWN";
+  }
+}
+
 
 
 void reset_OTA_timestamp(){

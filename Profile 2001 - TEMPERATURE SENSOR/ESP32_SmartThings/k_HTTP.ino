@@ -9,31 +9,36 @@ int send_device_info_to_main_server() {
   http.begin(main_server_address);
   http.addHeader("Content-Type", "application/json");
   
-  DynamicJsonDocument doc(1024);
-  doc["ip"] = String(WiFi.localIP().toString());
-  doc["code"] = String(REQUEST_DEVICE_CONNECTION);
-  doc["mac"] = get_MAC_as_ID();
-  doc["profile"] = DEVICE_PROFILE;
-  doc["version"] = firmware_version;
-  doc["mode"] = String(working_mode);
-  doc["sensors_states"] = get_sensor_state_repr();
-  doc["actuators_states"] = get_actuators_state_repr();
+  DynamicJsonDocument doc(256);
+
+  doc["endDeviceMac"] = get_MAC_as_ID();
+  doc["endDeviceIp"] = String(WiFi.localIP().toString());
+
+  JsonObject endDeviceModel = doc.createNestedObject("endDeviceModel");
+  endDeviceModel["modelId"] = DEVICE_PROFILE;
+
+  JsonObject user = doc.createNestedObject("user");
+  user["userId"] = user_id;
+
+  doc["endDeviceName"] = device_name;
+  doc["debugMode"] = debug_active;
+
+  JsonObject gateway = doc.createNestedObject("gateway");
+  gateway["gatewayMac"] = gateway_mac_address;
+  
+  doc["firmware"] = firmware_version;
+  doc["workingMode"] = get_working_mode_string(working_mode);
+
   String json_request;
   serializeJson(doc, json_request);
 
-  debug("ESP32 -> Sending POST request to Server");
+  debug("ESP32 -> Sending POST request to Server on " + main_server_address);
+  debug(json_request);
 
   int http_response_code = http.POST(json_request);
+  debug("Response from Server: " + http.getString());
 
-  if (http_response_code > 0) {
-    
-    device_name = http.getString(); //Get the name given to the device
-    
-    debug("Response from Server: " + String(http_response_code));
-    debug("Device name: " + device_name);
-       
-    esp_bt_dev_set_device_name(device_name.c_str());
-    
+  if (http_response_code > HTTP_CODE_CREATED) {
     if(deep_sleep_on){
       debug("Going to sleep... Wake me up when September ends...");
       esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);

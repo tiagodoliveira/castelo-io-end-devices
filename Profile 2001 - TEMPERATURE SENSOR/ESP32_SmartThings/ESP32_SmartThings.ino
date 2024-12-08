@@ -42,6 +42,7 @@
 #define OTA_HANDLER 18
 #define SETTING_UP_WIFI 19
 
+
 /* 
  * HTTP/TCP Communication Protocol
  */ 
@@ -113,15 +114,15 @@
 const int ACTUATOR_STATE_ADDRESS[] = {130, 131, 132, 133, 134, 135, 136, 137, 138, 139};
 
 
-// Checks if Bluetooth is turned on
+/*
+ * Bluetooth (BLE) Configuration
+ */
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 BLECharacteristic *pCharacteristic;
 bool bt_device_connected = false;
 char bt_received_char = '\0';
-//#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-//#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
-//#endif
+
 
 /* 
  * Program variables
@@ -145,9 +146,7 @@ unsigned long autonomous_timestamp, client_timestamp;
 unsigned long post_request_timestamp, reconnect_tcp_timestamp;
 unsigned long blink_timestamp, OTA_timestamp, request_actuator_timestamp;
 
-String ssid, password;
-String device_name = "Castelo-io-Device";
-String main_server_address;
+String ssid, password, user_id, main_server_address, telemetry_server_address, gateway_mac_address;
 
 JsonObject recieved_object;
 IPAddress gateway_address;

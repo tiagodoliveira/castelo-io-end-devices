@@ -11,6 +11,7 @@
 
 String firmware_version = "1.1";
 String DEVICE_PROFILE = "2001";
+String device_name = "Castelo-io-SmartDevice";
 
 // Indicates if the device will work in deep sleep mode
 boolean deep_sleep_on = false;
@@ -29,15 +30,13 @@ const int CLIENT_WAIT_TIME = 1000;
 int actuators_pins[] = {};//NOT USED
 
 void set_actuators_state(){}//NOT USED
- 
+
 void define_custom_device_variables(){
 
   pinMode(ON_BOARD_LED, OUTPUT);
   pinMode(SENSOR_PIN, INPUT);
 
   client_timestamp = millis();
-
-  main_server_address = "http://192.168.43.246:8080/communication";
 
   // Time in millis that takes the device in Autonomous mode to read the sensors again
   autonomous_max_time = 1000; 
