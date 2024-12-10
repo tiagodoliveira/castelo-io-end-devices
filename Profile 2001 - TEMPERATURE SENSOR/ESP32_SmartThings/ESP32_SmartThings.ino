@@ -18,6 +18,7 @@
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
 #include <WiFiManager.h>
+#include <PubSubClient.h>
 
 /* 
  * Automatons States
@@ -148,6 +149,12 @@ unsigned long blink_timestamp, OTA_timestamp, request_actuator_timestamp;
 
 String ssid, password, user_id, main_server_address, telemetry_server_address, gateway_mac_address;
 
+const char* mqtt_server_url = "http://192.168.1.179";
+const int mqtt_port = 1883;   
+// MQTT client details
+const char* client_id = "esp32-client";    // Unique client ID for the ESP32 device
+const char* topic = "device/#";            // Subscribes to all subtopics under 'device/'
+
 JsonObject recieved_object;
 IPAddress gateway_address;
 uint16_t gateway_port;
@@ -157,6 +164,7 @@ WebServer server(MDNS_SERVER_PORT);
 
 WiFiClient client;
 WiFiClient gateway;
+PubSubClient mqtt_client(client);
 
 TaskHandle_t Client_Task;
 
