@@ -1,3 +1,5 @@
+WiFiClient incoming_tcp_client;
+
 int gateway_to_server_request_handler(int code){
     
   switch(code){
@@ -9,7 +11,7 @@ int gateway_to_server_request_handler(int code){
     
     case REQUEST_ACTUATOR_CHANGE:
       debug("GATEWAY_REQUEST: " + String(code) + " REQUEST_ACTUATOR_CHANGE");
-      actuator_number = client.readStringUntil('\r').toInt();
+      actuator_number = incoming_tcp_client.readStringUntil('\r').toInt();
       debug("ACTUATOR NUMBER: " + String(actuator_number));
       server_response_code = RESPONSE_ACTUATOR_CHANGE;
       return CHANGE_ACTUATOR_STATE;
@@ -38,7 +40,7 @@ int gateway_to_server_request_handler(int code){
     case REQUEST_NAME_CHANGE:
       debug("GATEWAY_REQUEST: " + String(code) + " REQUEST_NAME_CHANGE");
       server_response_code = RESPONSE_OK;
-      device_name = client.readStringUntil('\r');
+      device_name = incoming_tcp_client.readStringUntil('\r');
       debug("New Device Name - > " + String(device_name));
       esp_bt_dev_set_device_name(device_name.c_str());
       return GATEWAY_RESPONSE;
@@ -73,17 +75,17 @@ void server_to_gateway_response_handler(int code){
 
     case RESPONSE_OK:
       debug("ESP32_RESPONSE: " + String(code) + " RESPONSE_OK");
-      client.print(String(code));
+      incoming_tcp_client.print(String(code));
       break;
     
     case RESPONSE_SENSOR_DATA:
       debug("ESP32_RESPONSE: " + String(code) + " RESPONSE_SENSOR_DATA");
-      client.print(String(code) + String(" ") + get_sensor_state_repr());
+      incoming_tcp_client.print(String(code) + String(" ") + get_sensor_state_repr());
       break;
     
     case RESPONSE_ACTUATOR_CHANGE:
       debug("ESP32_RESPONSE: " + String(code) + " RESPONSE_ACTUATOR_CHANGE");
-      client.print(String(code) + String(" ") + String(response_actuator_state));
+      incoming_tcp_client.print(String(code) + String(" ") + String(response_actuator_state));
       break;
 
     case RESPONSE_MODE_CHANGE:
@@ -91,7 +93,7 @@ void server_to_gateway_response_handler(int code){
       server_state = (server_state == MANUAL_MODE) ? AUTONOMOUS_MODE : MANUAL_MODE;
       working_mode = server_state;
       reset_autonomous_timestamp();
-      client.print(String(code) + String(" ") + String(server_state));
+      incoming_tcp_client.print(String(code) + String(" ") + String(server_state));
       break;
 
     case RESPONSE_DEBUG_CHANGE:
@@ -100,110 +102,51 @@ void server_to_gateway_response_handler(int code){
       if(debug_active){
         debug("Debug Mode Activated!");
       }
-      client.print(String(code) + String(" ") + String(debug_active));
+      incoming_tcp_client.print(String(code) + String(" ") + String(debug_active));
       break;
     
     case RESPONSE_GATEWAY_CONNECTED:
       debug("ESP32_RESPONSE: " + String(code) + " RESPONSE_GATEWAY_CONNECTED");
       client_state = READ_SENSORS;
-      client.print(String(RESPONSE_OK));
+      incoming_tcp_client.print(String(RESPONSE_OK));
       break;
 
     case RESPONSE_DEVICE_RESET:
       debug("ESP32_RESPONSE: " + String(code) + " RESPONSE_DEVICE_RESET");
       clear_eeprom();
       main_state = WIFI_SETUP;
-      client.print(String(RESPONSE_OK));
+      incoming_tcp_client.print(String(RESPONSE_OK));
       break;
 
     case RESPONSE_ERROR:
       debug("ESP32_RESPONSE: " + String(code) + " RESPONSE_ERROR");
-      client.print(String(code));
+      incoming_tcp_client.print(String(code));
       break;
       
     default:
       debug("ESP32_RESPONSE: " + String(code) + " UNKNOWN_CODE");
-      client.print(UNKNOWN_CODE);
+      incoming_tcp_client.print(UNKNOWN_CODE);
       break;
   }
-  client.stop();
-}
-
-int client_to_gateway_request_handler(int code){
- 
-  switch(code){
-    
-    case REQUEST_SENSOR_DATA:      
-      if(gateway.connect(gateway_address, GATEWAY_PORT)){
-        debug("ESP32_REQUEST: " + String(code) + " REQUEST_SENSOR_DATA");
-        gateway.print(String(code) + String(" ") + get_MAC_as_ID() + 
-                     String(" ") + get_sensor_state_repr());
-        String line = gateway.readStringUntil('\r');
-        gateway_response_code = line.toInt(); 
-      }
-      else{
-        gateway_response_code = NOT_CONNECTED;
-      }
-      return DEVICE_RESPONSE;
-
-    case REQUEST_ACTUATOR_STATE_CHANGED:
-      
-      if(gateway.connect(gateway_address, GATEWAY_PORT)){
-        debug("ESP32_REQUEST: " + String(code) + " REQUEST_ACTUATOR_STATE_CHANGED");
-        gateway.print(String(code) + String(" ") + get_MAC_as_ID() + String(" ") + String(actuator_number) + 
-                     String(" ")  + String(actuator_state[actuator_number]));
-        String line = gateway.readStringUntil('\r');
-        gateway_response_code = line.toInt();
-        return DEVICE_RESPONSE;
-      }
-      else{
-        return GATEWAY_REQUEST;
-      }
-
-    default:
-      return READ_SENSORS;
-  }
-}
-
-int gateway_to_client_response_handler(int code){
- 
-  switch(code){
-    
-    case RESPONSE_OK:
-      debug("GATEWAY_RESPONSE: " + String(code) + " RESPONSE_OK");
-      return READ_SENSORS;
-
-    case RESPONSE_ACTUATOR_STATE_CHANGED:
-      debug("GATEWAY_RESPONSE: " + String(code) + " RESPONSE_ACTUATOR_STATE_CHANGED");
-      return READ_SENSORS;
-    
-    case NOT_CONNECTED:
-      debug("GATEWAY_RESPONSE: " + String(code) + " NOT_CONNECTED");
-      return RECONNECT_TCP;
-      
-    default:
-      debug("GATEWAY_RESPONSE: " + String(code) + " UNKNOWN_CODE");
-      return READ_SENSORS;
-  }
+  incoming_tcp_client.stop();
 }
 
 int handle_tcp_client(){
-  delay(1000);
-  client = WiFi_Server.available();
+  incoming_tcp_client = WiFi_Server.available();
 
-  if (client.connected()) {
+  if (incoming_tcp_client.connected()) {
 
     debug("Client Connected!");
-    debug("IP: " + String(client.remoteIP().toString()) 
-           + ":" + String(client.remotePort()));
+    debug("IP: " + String(incoming_tcp_client.remoteIP().toString()) 
+           + ":" + String(incoming_tcp_client.remotePort()));
            
-    gateway_address = client.remoteIP();
+    gateway_address = incoming_tcp_client.remoteIP();
  
     char recieved_code[4];
     
-    recieved_code[0] = client.read();
-    recieved_code[1] = client.read();
-    recieved_code[2] = client.read();
+    recieved_code[0] = incoming_tcp_client.read();
+    recieved_code[1] = incoming_tcp_client.read();
+    recieved_code[2] = incoming_tcp_client.read();
     recieved_code[3] = 0;
     
     return String(recieved_code).toInt();

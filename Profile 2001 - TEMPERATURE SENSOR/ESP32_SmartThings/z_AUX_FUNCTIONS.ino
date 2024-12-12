@@ -52,6 +52,10 @@ void reset_reconnect_tcp_timestamp(){
   reconnect_tcp_timestamp = millis();
 }
 
+void reset_reconnect_mqtt_timestamp(){
+  reconnect_mqtt_timestamp = millis();
+}
+
 void reset_post_request_timestamp(){
   post_request_timestamp = millis();
 }

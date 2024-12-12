@@ -16,17 +16,17 @@ boolean load_settings_eeprom() {
   
   debug("Reading EEPROM -> WiFi SSID...");
   
-  for (int i = 0; i < 32; ++i){
+  for (int i = WIFI_SSID_ADDRESS_START; i <= WIFI_SSID_ADDRESS_END; ++i){
     char eeprom_value = char(EEPROM.read(i));
-    ssid += eeprom_value;
+    wifi_ssid += eeprom_value;
     total_ssid_sum += (eeprom_value + 0);
   }
 
   if(total_ssid_sum > 0){
     debug("Reading EEPROM -> WiFi Password...");
   
-    for (int i = 32; i < 96; ++i){
-      password += char(EEPROM.read(i));
+    for (int i = WIFI_PASWORD_ADDRESS_START; i <= WIFI_PASWORD_ADDRESS_END; ++i){
+      wifi_password += char(EEPROM.read(i));
     }
     read_mode_eeprom();
     read_actuator_state_eeprom();
@@ -40,25 +40,31 @@ boolean load_settings_eeprom() {
 
 /*
  * Saves the connected network's SSID and Password
- * to their correspondent EEPROM address.
+ * to their correspondent EEPROM address if the current one is different from the already saved
+ * We do this to avoid rewirting on the EEPROM everytime the device restarts because the EEPROM
+ * as a write life of 100,000 times
  */
 void save_network_settings() {
 
   String curr_ssid = WiFi.SSID();
   String curr_pass = WiFi.psk();
-  
-  if (curr_ssid.length() > 0 && curr_pass.length() > 0) {
-    
-    debug("Saving network settings...");
-    
-    debug("Writing EEPROM ssid...");
-    write_str_eeprom(0, curr_ssid);
-    
-    debug("Writing EEPROM pass..."); 
-    write_str_eeprom(SSID_MAX_LENGTH, curr_pass);
-  }
-  else{
-    debug("Invalid network settings recieved!");
+
+  if(strcmp(curr_ssid.c_str(), wifi_ssid.c_str()) != 0 && strcmp(curr_pass.c_str(), wifi_password.c_str()) != 0){
+    if (curr_ssid.length() > 0 && curr_pass.length() > 0) {
+        
+        debug("Saving network settings...");
+        
+        debug("Writing EEPROM wifi_ssid...");
+        write_str_eeprom(WIFI_SSID_ADDRESS_START, curr_ssid);
+        
+        debug("Writing EEPROM pass..."); 
+        write_str_eeprom(WIFI_PASWORD_ADDRESS_START, curr_pass);
+      }
+      else{
+        debug("Invalid network settings recieved!");
+      }
+  } else{
+    debug("Valid credentials already saved!"); 
   }
 }
 

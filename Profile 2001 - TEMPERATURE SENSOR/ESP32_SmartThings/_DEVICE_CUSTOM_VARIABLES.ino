@@ -49,6 +49,8 @@ void define_custom_device_variables(){
   // with the Gateway. Only used in Client Behavior.
   reconnect_tcp_max_time = 5000;
 
+  reconnect_mqtt_max_time = 5000;
+  
   // Maximum time in millis that the Over the Air Update Server will wait for a new
   // firmware update file, sent by the Gateway.
   OTA_max_time = 120000;

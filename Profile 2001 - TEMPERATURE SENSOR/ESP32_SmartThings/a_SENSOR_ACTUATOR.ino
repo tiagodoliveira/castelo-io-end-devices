@@ -28,7 +28,7 @@ void change_actuator_state(){
 void change_all_actuators(){
   boolean turnON = 1;
   int num_actuators = sizeof(actuator_state);
-  
+
   for(int i = 0; i < num_actuators; i++){
     if(actuator_state[i]){
       turnON = 0;

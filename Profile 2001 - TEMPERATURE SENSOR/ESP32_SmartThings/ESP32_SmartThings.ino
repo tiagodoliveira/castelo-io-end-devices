@@ -109,10 +109,18 @@
 /* 
  * EEPROM addresses
  */ 
-#define DEVICE_NAME_START_ADDRESS 100
-#define DEVICE_NAME_END_ADDRESS 119
-#define WORKING_MODE_ADDRESS 120
-const int ACTUATOR_STATE_ADDRESS[] = {130, 131, 132, 133, 134, 135, 136, 137, 138, 139};
+#define WIFI_SSID_ADDRESS_START 0
+#define WIFI_SSID_ADDRESS_END 31
+#define WIFI_PASWORD_ADDRESS_START 32
+#define WIFI_PASWORD_ADDRESS_END 95
+#define DEVICE_NAME_ADDRESS_START 96
+#define DEVICE_NAME_ADDRESS_END 195
+#define WORKING_MODE_ADDRESS 196
+const int ACTUATOR_STATE_ADDRESS[] = {197, 198, 199, 200};
+// addresses 201 to 255 are empty
+#define SERVER_HOST_ADDRESS_START 256
+#define SERVER_HOST_ADDRESS_END 512
+
 
 
 /*
@@ -134,7 +142,7 @@ int gateway_request_code, client_request_code, gateway_response_code;
 int server_response_code, working_mode;
 int ssid_length, psk_length, server_http_response;
 int autonomous_max_time, OTA_max_time;
-int post_request_max_time, reconnect_tcp_max_time;
+int post_request_max_time, reconnect_tcp_max_time, reconnect_mqtt_max_time;
 
 boolean connected_to_gateway, response_actuator_state, change_all;
 boolean first_time_connection = true;
@@ -144,29 +152,23 @@ boolean debug_active = true;
 boolean board_led_state = HIGH;
 
 unsigned long autonomous_timestamp, client_timestamp;
-unsigned long post_request_timestamp, reconnect_tcp_timestamp;
+unsigned long post_request_timestamp, reconnect_tcp_timestamp, reconnect_mqtt_timestamp;
 unsigned long blink_timestamp, OTA_timestamp, request_actuator_timestamp;
 
-String ssid, password, user_id, main_server_address, telemetry_server_address, gateway_mac_address;
+String wifi_ssid, wifi_password, user_id, main_server_address, telemetry_server_address, gateway_mac_address;
 
-const char* mqtt_server_url = "http://192.168.1.179";
+const char* mqtt_server_url = "192.168.1.179";
 const int mqtt_port = 1883;   
 // MQTT client details
-const char* client_id = "esp32-client";    // Unique client ID for the ESP32 device
-const char* topic = "device/#";            // Subscribes to all subtopics under 'device/'
+const char* mqtt_client_id;    // Unique client ID for the ESP32 device
+const char* mqtt_topic = "device/#";            // Subscribes to all subtopics under 'device/'
 
 JsonObject recieved_object;
 IPAddress gateway_address;
 uint16_t gateway_port;
 
 WiFiServer WiFi_Server(ESP32_SERVER_PORT);
-WebServer server(MDNS_SERVER_PORT);
-
-WiFiClient client;
-WiFiClient gateway;
-PubSubClient mqtt_client(client);
-
-TaskHandle_t Client_Task;
+WebServer http_server(MDNS_SERVER_PORT);
 
 /*
  * Server Index Page

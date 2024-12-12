@@ -1,3 +1,8 @@
+// Task Handles
+TaskHandle_t mqtt_task_handle;
+TaskHandle_t gateway_to_esp_tcp_task_handle;
+TaskHandle_t esp_to_gateway_tcp_task_handle;
+
 void esp_main() {
   
   switch (main_state) {
@@ -18,13 +23,17 @@ void esp_main() {
       break;
 
     case SETTING_UP_WIFI:
-      server.handleClient();
+      http_server.handleClient();
       break;
 
     case CONNECT_WIFI:
       if(!first_time_connection){
-        vTaskDelete(Client_Task);
-        debug("CLIENT TASK -> DELETED");
+        vTaskDelete(mqtt_task_handle);
+        vTaskDelete(gateway_to_esp_tcp_task_handle);
+        vTaskDelete(esp_to_gateway_tcp_task_handle);
+        debug("MQTT Task -> DELETED");
+        debug("GATEWAY to ESP Server Task -> DELETED");
+        debug("ESP to GATEWAY Client Task -> DELETED");
       }
       manual_actuator_state_change_handler();
       connect_to_wifi();
@@ -53,14 +62,29 @@ void esp_main() {
               server_state = MANUAL_MODE;
               
             }
+
+            /*
+              All http requests either inbound or outbound will be dealt in the esp_main task running
+              in the ESP32 loop which runs on core 0. All other TCP connections will be running in 
+              core 1. MQTT will have the highest priority because it will be the main form of communication
+              All other tasks will should have lower priority as they are not as often called or maybe not at all
+              if for example the device doesn't need a Gateway connection.
+            */
+
+            //This will handle all incoming and outgoing mqtt messages
+            xTaskCreatePinnedToCore(mqttTask, "MQTT Task", 4096, NULL, 3, &mqtt_task_handle, 0);  // MQTT - High priority (3)
+
+            //This task will handle all TCP client connection from the Gateway to the ESP32
+            xTaskCreatePinnedToCore(server_behavior, "GATEWAY to ESP Server Task", 4096, NULL, 2, &gateway_to_esp_tcp_task_handle, 0); // Gateway - Low priority (1)
             
+            //This task will manage all TCP connections from the ESP32 to the Gateway 
             xTaskCreatePinnedToCore(
-                    client_behavior,   /* Task function. */
-                    "Client_Task",     /* name of task. */
-                    10000,             /* Stack size of task */
+                    gateway_outgoing_tcp_client_handler,   /* Task function. */
+                    "ESP to GATEWAY Client Task",     /* name of task. */
+                    4096,             /* Stack size of task */
                     NULL,              /* parameter of the task */
                     1,                 /* priority of the task */
-                    &Client_Task,      /* Task handle to keep track of created task */
+                    &esp_to_gateway_tcp_task_handle,      /* Task handle to keep track of created task */
                     0);                /* pin task to core 0 */   
                           
             first_time_connection = false;
@@ -77,7 +101,7 @@ void esp_main() {
         main_state = CONNECT_WIFI;
       }
       if(OTA_Update_active){
-        server.handleClient();
+        http_server.handleClient();
         if((millis() - OTA_timestamp) >= OTA_max_time){
           debug("OTA Server shutting down...");
           OTA_Update_active = false;
