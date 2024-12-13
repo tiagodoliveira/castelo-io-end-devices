@@ -157,7 +157,7 @@ unsigned long blink_timestamp, OTA_timestamp, request_actuator_timestamp;
 
 String wifi_ssid, wifi_password, user_id, main_server_address, telemetry_server_address, gateway_mac_address;
 
-const char* mqtt_server_url = "192.168.1.179";
+const char* mqtt_server_url = "192.168.1.202";
 const int mqtt_port = 1883;   
 // MQTT client details
 const char* mqtt_client_id;    // Unique client ID for the ESP32 device

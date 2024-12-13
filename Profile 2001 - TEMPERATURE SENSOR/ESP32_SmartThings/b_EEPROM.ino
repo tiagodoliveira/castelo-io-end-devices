@@ -49,7 +49,7 @@ void save_network_settings() {
   String curr_ssid = WiFi.SSID();
   String curr_pass = WiFi.psk();
 
-  if(strcmp(curr_ssid.c_str(), wifi_ssid.c_str()) != 0 && strcmp(curr_pass.c_str(), wifi_password.c_str()) != 0){
+  if(strcmp(curr_ssid.c_str(), wifi_ssid.c_str()) != 0 && strcmp(curr_pass.c_str(), wifi_password.c_str()) != 0 && first_time_connection){
     if (curr_ssid.length() > 0 && curr_pass.length() > 0) {
         
         debug("Saving network settings...");

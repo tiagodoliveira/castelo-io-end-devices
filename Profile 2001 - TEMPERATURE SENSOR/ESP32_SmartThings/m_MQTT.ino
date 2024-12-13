@@ -37,9 +37,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   debug(topic);
 
   debug("Message: ");
-  String testMessage = (char*)payload;
-  // TODO handle MQTT message
-  debug(testMessage);
+  // Create a properly terminated string from the payload
+  char message[length + 1];  // Allocate memory for the string, including null terminator
+  memcpy(message, payload, length); // Copy payload into message buffer
+  message[length] = '\0';  // Add null terminator to make it a proper C-string
+
+  Serial.println(message);  // Print message as a string
 }
 
 void reconnect() {
