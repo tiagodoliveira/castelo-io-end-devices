@@ -5,6 +5,7 @@ PubSubClient mqtt_client(mqtt_wifi_client);
 void mqttTask(void* parameter) {
   mqtt_client.setServer(mqtt_server_url, mqtt_port);  // Set the MQTT broker details
   mqtt_client.setCallback(mqttCallback);         // Set the message callback function
+  mqtt_topic += get_MAC_as_ID() + "/#"; //Subscribes to all topics belonging to this device mac
 
   for (;;) {
     if (!mqtt_client.connected()) {
@@ -18,14 +19,14 @@ void mqttTask(void* parameter) {
 // Connect to MQTT Broker
 void connectMQTT() {
   while (!mqtt_client.connected()) {
-    Serial.print("Connecting to MQTT broker...");
-    if (mqtt_client.connect(get_MAC_as_ID().c_str())) { // Set your unique client ID
-      Serial.println("MQTT connected!");
-      mqtt_client.subscribe("device/#"); // Subscribe to desired topics
+    debug("Connecting to MQTT broker...");
+    if (mqtt_client.connect(get_MAC_as_ID().c_str())) {
+      debug("MQTT connected!");
+      mqtt_client.subscribe(mqtt_topic.c_str());
     } else {
-      Serial.print("Failed, rc=");
+      debug("Failed, rc=");
       Serial.print(mqtt_client.state());
-      Serial.println(" Trying again in 5 seconds...");
+      debug(" Trying again in 5 seconds...");
       vTaskDelay(5000 / portTICK_PERIOD_MS); // Use FreeRTOS delay (non-blocking)
     }
   }
@@ -42,7 +43,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   memcpy(message, payload, length); // Copy payload into message buffer
   message[length] = '\0';  // Add null terminator to make it a proper C-string
 
-  Serial.println(message);  // Print message as a string
+  // Extract component number
+  char* lastSlash = strrchr(topic, '/'); // Find the last occurrence of '/'
+  if (lastSlash != nullptr) {
+      int componentNumber = atoi(lastSlash + 1); // Convert the string after the last '/' to an integer
+      debug("Component Number: ");
+      debug(componentNumber);
+
+      // Call a function based on the `componentNumber`
+      handleComponent(componentNumber, message);
+  } else {
+      Serial.println("Unable to extract component number.");
+  }
 }
 
 void reconnect() {
@@ -51,7 +63,7 @@ void reconnect() {
       debug("Attempting MQTT connection...");
       if (mqtt_client.connect(mqtt_client_id)) {
         debug("connected!");
-        mqtt_client.subscribe(mqtt_topic); // Subscribe to the topic
+        mqtt_client.subscribe(mqtt_topic.c_str()); // Subscribe to the topic
         debug("Subscribed to topic: ");
         debug(mqtt_topic);
       } else {

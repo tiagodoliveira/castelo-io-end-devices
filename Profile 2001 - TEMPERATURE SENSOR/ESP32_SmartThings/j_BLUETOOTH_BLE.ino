@@ -93,3 +93,9 @@ void debug(String val){
     Serial.println(val);
   }
 }
+
+void debug(int val){
+  if(debug_active){
+    Serial.println(val);
+  }
+}

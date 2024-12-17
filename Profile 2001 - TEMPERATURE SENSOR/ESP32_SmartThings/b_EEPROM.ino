@@ -38,18 +38,13 @@ boolean load_settings_eeprom() {
   return false;
 }
 
-/*
- * Saves the connected network's SSID and Password
- * to their correspondent EEPROM address if the current one is different from the already saved
- * We do this to avoid rewirting on the EEPROM everytime the device restarts because the EEPROM
- * as a write life of 100,000 times
- */
+
 void save_network_settings() {
 
   String curr_ssid = WiFi.SSID();
   String curr_pass = WiFi.psk();
 
-  if(strcmp(curr_ssid.c_str(), wifi_ssid.c_str()) != 0 && strcmp(curr_pass.c_str(), wifi_password.c_str()) != 0 && first_time_connection){
+  if(first_time_connection){
     if (curr_ssid.length() > 0 && curr_pass.length() > 0) {
         
         debug("Saving network settings...");

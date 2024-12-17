@@ -161,7 +161,7 @@ const char* mqtt_server_url = "192.168.1.202";
 const int mqtt_port = 1883;   
 // MQTT client details
 const char* mqtt_client_id;    // Unique client ID for the ESP32 device
-const char* mqtt_topic = "device/#";            // Subscribes to all subtopics under 'device/'
+String mqtt_topic = "device/";            // Subscribes to all subtopics under 'device/'
 
 JsonObject recieved_object;
 IPAddress gateway_address;

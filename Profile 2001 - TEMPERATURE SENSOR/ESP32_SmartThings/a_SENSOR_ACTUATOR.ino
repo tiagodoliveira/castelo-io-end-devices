@@ -1,3 +1,6 @@
+void handleComponent(int componentNumber, String message){
+  //TODO Handle Components based on device type
+}
 
 void read_sensors(int task){
   

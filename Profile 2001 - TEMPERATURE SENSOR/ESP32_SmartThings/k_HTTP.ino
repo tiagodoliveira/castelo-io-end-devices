@@ -26,15 +26,13 @@ int send_device_info_to_main_server() {
   endDeviceModel["modelId"] = DEVICE_PROFILE;
 
   JsonObject user = doc.createNestedObject("user");
-  //user["userId"] = user_id;
-  user["userId"] = "cfd3ce69-1f3d-43cc-87f1-a686373a25ca";
+  user["userId"] = user_id;
 
   doc["endDeviceName"] = device_name;
   doc["debugMode"] = debug_active;
 
   JsonObject gateway = doc.createNestedObject("gateway");
-  //gateway["gatewayMac"] = gateway_mac_address;
-  gateway["gatewayMac"] = "00:11:22:33:44:55";
+  gateway["gatewayMac"] = gateway_mac_address;
   
   doc["firmware"] = firmware_version;
   doc["workingMode"] = get_working_mode_string(working_mode);
