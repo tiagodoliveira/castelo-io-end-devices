@@ -6,8 +6,19 @@ String get_MAC_as_ID() {
   
   char mac_char[18] = {0};
   sprintf(mac_char, "%02X:%02X:%02X:%02X:%02X:%02X", 
-  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+          mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   
+  return String(mac_char);
+}
+
+String get_MAC_as_mDNS() {
+  uint8_t mac[6];
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
+
+  char mac_char[13] = {0};
+  sprintf(mac_char, "%02X%02X%02X%02X%02X%02X", 
+          mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
   return String(mac_char);
 }
 
@@ -29,8 +40,6 @@ String get_working_mode_string(int working_mode){
       return "UNKNOWN";
   }
 }
-
-
 
 void reset_OTA_timestamp(){
   OTA_timestamp = millis();

@@ -94,6 +94,12 @@ void debug(String val){
   }
 }
 
+void debug(const char *val){
+  if(debug_active){
+    Serial.println(val);
+  }
+}
+
 void debug(int val){
   if(debug_active){
     Serial.println(val);

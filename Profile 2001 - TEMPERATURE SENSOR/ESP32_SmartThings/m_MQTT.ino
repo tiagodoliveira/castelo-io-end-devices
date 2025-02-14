@@ -50,7 +50,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       debug("Component Number: ");
       debug(componentNumber);
 
-      // Call a function based on the `componentNumber`
+      // Call a function based on the 'componentNumber'
       handleComponent(componentNumber, message);
   } else {
       Serial.println("Unable to extract component number.");

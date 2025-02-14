@@ -47,51 +47,47 @@ void esp_main() {
       else{
         if((millis() - post_request_timestamp) >= post_request_max_time){
           reset_post_request_timestamp();
-          server_http_response = send_device_info_to_main_server();
-          
-          if(server_http_response == RESPONSE_OK){
             
-            if(working_mode == AUTONOMOUS_MODE){
-              debug("ESP32 -> SERVER AUTO MODE");
-              server_state = AUTONOMOUS_MODE;
-              reset_autonomous_timestamp();
-            }
-            else{
-              debug("ESP32 -> SERVER MANUAL MODE");
-              debug("Waiting for TCP request...");
-              server_state = MANUAL_MODE;
-              
-            }
-
-            /*
-              All http requests either inbound or outbound will be dealt in the esp_main task running
-              in the ESP32 loop which runs on core 0. All other TCP connections will be running in 
-              core 1. MQTT will have the highest priority because it will be the main form of communication
-              All other tasks will should have lower priority as they are not as often called or maybe not at all
-              if for example the device doesn't need a Gateway connection.
-            */
-
-            //This will handle all incoming and outgoing mqtt messages
-            xTaskCreatePinnedToCore(mqttTask, "MQTT Task", 4096, NULL, 3, &mqtt_task_handle, 0);  // MQTT - High priority (3)
-
-            //This task will handle all TCP client connection from the Gateway to the ESP32
-            xTaskCreatePinnedToCore(server_behavior, "GATEWAY to ESP Server Task", 4096, NULL, 2, &gateway_to_esp_tcp_task_handle, 0); // Gateway - Low priority (1)
-            
-            //This task will manage all TCP connections from the ESP32 to the Gateway 
-            xTaskCreatePinnedToCore(
-                    gateway_outgoing_tcp_client_handler,   /* Task function. */
-                    "ESP to GATEWAY Client Task",     /* name of task. */
-                    4096,             /* Stack size of task */
-                    NULL,              /* parameter of the task */
-                    1,                 /* priority of the task */
-                    &esp_to_gateway_tcp_task_handle,      /* Task handle to keep track of created task */
-                    0);                /* pin task to core 0 */   
-                          
-            first_time_connection = false;
-            main_state = OTA_HANDLER;
-
-            debug("-> SERVER AND CLIENT TASKS CREATED");
+          if(working_mode == AUTONOMOUS_MODE){
+            debug("ESP32 -> SERVER AUTO MODE");
+            server_state = AUTONOMOUS_MODE;
+            reset_autonomous_timestamp();
           }
+          else{
+            debug("ESP32 -> SERVER MANUAL MODE");
+            debug("Waiting for TCP request...");
+            server_state = MANUAL_MODE;
+            
+          }
+
+          /*
+            All http requests either inbound or outbound will be dealt in the esp_main task running
+            in the ESP32 loop which runs on core 0. All other TCP connections will be running in 
+            core 1. MQTT will have the highest priority because it will be the main form of communication
+            All other tasks will should have lower priority as they are not as often called or maybe not at all
+            if for example the device doesn't need a Gateway connection.
+          */
+
+          //This will handle all incoming and outgoing mqtt messages
+          xTaskCreatePinnedToCore(mqttTask, "MQTT Task", 4096, NULL, 3, &mqtt_task_handle, 0);  // MQTT - High priority (3)
+
+          //This task will handle all TCP client connection from the Gateway to the ESP32
+          xTaskCreatePinnedToCore(server_behavior, "GATEWAY to ESP Server Task", 4096, NULL, 2, &gateway_to_esp_tcp_task_handle, 0); // Gateway - Low priority (1)
+          
+          //This task will manage all TCP connections from the ESP32 to the Gateway 
+          xTaskCreatePinnedToCore(
+                  gateway_outgoing_tcp_client_handler,   /* Task function. */
+                  "ESP to GATEWAY Client Task",     /* name of task. */
+                  4096,             /* Stack size of task */
+                  NULL,              /* parameter of the task */
+                  1,                 /* priority of the task */
+                  &esp_to_gateway_tcp_task_handle,      /* Task handle to keep track of created task */
+                  0);                /* pin task to core 0 */   
+                        
+          first_time_connection = false;
+          main_state = OTA_HANDLER;
+
+          debug("-> SERVER AND CLIENT TASKS CREATED");
         }
       }
       break;

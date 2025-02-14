@@ -18,12 +18,12 @@ void server_behavior(void* parameter){
     }
 }
 
-void start_MDNS_server(){
+void start_MDNS_server(const char *name){
   // use multicast DNS to create host name address
   // https://tttapa.github.io/ESP8266/Chap08%20-%20mDNS.html
 
-  debug(device_name);
-  if (!MDNS.begin(device_name.c_str())) { //http_client://device_name.local
+  debug(name);
+  if (!MDNS.begin(name)) { //http_client://device_name.local
     debug("Error setting up MDNS responder!");
   }
   debug("MDNS responder started");

@@ -155,7 +155,7 @@ unsigned long autonomous_timestamp, client_timestamp;
 unsigned long post_request_timestamp, reconnect_tcp_timestamp, reconnect_mqtt_timestamp;
 unsigned long blink_timestamp, OTA_timestamp, request_actuator_timestamp;
 
-String wifi_ssid, wifi_password, user_id, main_server_address, telemetry_server_address, gateway_mac_address;
+String wifi_ssid, wifi_password, telemetry_server_address, gateway_mac_address;
 
 const char* mqtt_server_url = "192.168.1.202";
 const int mqtt_port = 1883;   
