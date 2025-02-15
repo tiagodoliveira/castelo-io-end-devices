@@ -113,13 +113,11 @@
 #define WIFI_SSID_ADDRESS_END 31
 #define WIFI_PASWORD_ADDRESS_START 32
 #define WIFI_PASWORD_ADDRESS_END 95
-#define DEVICE_NAME_ADDRESS_START 96
-#define DEVICE_NAME_ADDRESS_END 195
-#define WORKING_MODE_ADDRESS 196
-const int ACTUATOR_STATE_ADDRESS[] = {197, 198, 199, 200};
-// addresses 201 to 255 are empty
-#define SERVER_HOST_ADDRESS_START 256
-#define SERVER_HOST_ADDRESS_END 512
+#define WORKING_MODE_ADDRESS 96
+const int ACTUATOR_STATE_ADDRESS[] = {97, 98, 99, 100}; // This can be increased if the device has more than 4 actuators
+// addresses 101 to 255 are empty
+#define SERVER_HOST_ADDRESS_START 256 
+#define SERVER_HOST_ADDRESS_END 512 // No way a url will be near 256 chars but we have the memory so lets use it
 
 
 
